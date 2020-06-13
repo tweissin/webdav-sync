@@ -16,7 +16,10 @@ docker run --restart always -v /tmp/webdav:/var/lib/dav \
     --publish 80:80 -d bytemark/webdav
 ```
 3. In a web browser, try connecting and make sure your credentials work and that you see your files: http://localhost
-3. Run the Rust client application.
+4. Run the Rust client application.
+  * In VSCode
+  * or, `WEBDAV_USERNAME=YOUR_USERNAME WEBDAV_PASSWORD=YOUR_PASSWORD cargo run`
+
 ```rust
     let client = Client::new()
         .credentials("YOUR_USERNAME", "YOUR_PASSWORD")

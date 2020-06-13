@@ -22,8 +22,8 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "env": {
-                "USERNAME": "MYUSERNAME",
-                "PASSWORD": "MYPASSWORD"
+                "WEBDAV_USERNAME": "MYUSERNAME",
+                "WEBDAV_PASSWORD": "MYPASSWORD"
             }
         }
     ]

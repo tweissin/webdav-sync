@@ -2,8 +2,10 @@ use hyperdav::Client;
 use std::env;
 
 pub fn run() {
-    let username = env::var("USERNAME");
-    let password = env::var("PASSWORD");
+    let username = env::var("WEBDAV_USERNAME");
+    let password = env::var("WEBDAV_PASSWORD");
+    println!("{:?}", username);
+    println!("{:?}", password);
     let client = Client::new()
         .credentials(username.unwrap(), password.unwrap())
         .build("http://192.168.1.15/")
