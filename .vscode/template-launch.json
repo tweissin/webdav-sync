@@ -20,26 +20,11 @@
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'webdav-sync'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=webdav-sync",
-                    "--package=webdav-sync"
-                ],
-                "filter": {
-                    "name": "webdav-sync",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "USERNAME": "MYUSERNAME",
+                "PASSWORD": "MYPASSWORD"
+            }
         }
     ]
 }
