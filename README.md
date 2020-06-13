@@ -19,7 +19,7 @@ docker run --restart always -v /tmp/webdav:/var/lib/dav \
 3. Run the Rust client application.
 ```rust
     let client = Client::new()
-        .credentials("MYUSERNAME", "MYPASSWORD")
+        .credentials("YOUR_USERNAME", "YOUR_PASSWORD")
         .build("http://192.168.1.2/")
         .unwrap();
 ```
