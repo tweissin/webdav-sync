@@ -17,6 +17,24 @@
                 }
             },
             "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable with environment 'webdav-sync'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=webdav-sync",
+                    "--package=webdav-sync"
+                ],
+                "filter": {
+                    "name": "webdav-sync",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
             "cwd": "${workspaceFolder}",
             "env": {
                 "WEBDAV_USERNAME": "MYUSERNAME",

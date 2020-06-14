@@ -1,5 +1,7 @@
 # WebDAV sync
 
+This application can be used to synchronize files from your local filesystem to a remote WebDAV server.
+
 ## Prerequisites
 
 * MacOS
@@ -14,16 +16,21 @@ Build it
 cargo build --release
 ```
 
-Run it
+Run it and it will prompt you for all parameters.
+
+```
+./target/release/webdav-sync 
+```
+
+You may otionally cnfigure your `.bash_profile`/`.zprofile` and restart your shell so it doesn't ask you for every parameter.
 
 ```
 export WEBDAV_HOSTNAME=YOUR_HOSTNAME
 export WEBDAV_USERNAME=YOUR_USERNAME
 export WEBDAV_PASSWORD=YOUR_PASSWORD
-./target/release/webdav-sync -d /tmp/dir
 ```
 
-Or you can specify all options at the command-line:
+You can specify all options at the command-line (not recommended because of shell history):
 
 ```
 ./target/release/webdav-sync -h YOUR_HOSTNAME -d /tmp/dir -u YOUR_USERNAME -p YOUR_PASSWORD 
