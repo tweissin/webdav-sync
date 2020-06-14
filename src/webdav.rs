@@ -1,8 +1,11 @@
 use hyperdav::Client;
+use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::thread;
+use std::time::Instant;
 
 pub struct WebDav {
     client: Client,
@@ -20,6 +23,9 @@ impl WebDav {
         }
     }
     pub fn write_file(&self, path_buf: PathBuf) -> io::Result<()> {
+        let pb = path_buf.clone();
+        let md = fs::metadata(pb)?;
+        let size: u64 = md.len();
         let f = File::open(path_buf.clone())?;
         let reader = BufReader::new(f);
 
@@ -45,7 +51,18 @@ impl WebDav {
                 path_vec.pop();
                 self.mkdir(path_vec);
             }
+            let now = Instant::now();
             self.put_file(path_and_file_vec, reader);
+
+            let duration = now.elapsed();
+            let kbps = (size as u128 / duration.as_millis()) as f64 / 1000.0;
+            println!(
+                "{:?} elapsed {} ms, {} Kbps, {} bytes",
+                thread::current().id(),
+                duration.as_millis(),
+                kbps,
+                size
+            );
             Ok(())
         } else {
             self.mkdir(path_vec);
@@ -55,7 +72,7 @@ impl WebDav {
 
     fn put_file(&self, path_and_file_vec: Vec<String>, reader: BufReader<File>) {
         let pathstr = path_and_file_vec.join("/");
-        println!("WebDav: write '{}'", pathstr);
+        println!("{:?} WebDav: write '{}'", thread::current().id(), pathstr);
         match self.client.put(reader, path_and_file_vec) {
             Err(err) => {
                 println!("problem writing file {}", err);
@@ -66,7 +83,11 @@ impl WebDav {
 
     fn mkdir(&self, path_vec: Vec<String>) {
         let pathstr = path_vec.join("/");
-        println!("WebDav: mkdir '{}'", pathstr);
+        if pathstr.len() == 0 {
+            // nothing to do
+            return;
+        }
+        println!("{:?} WebDav: mkdir '{}'", thread::current().id(), pathstr);
 
         match self.client.mkcol(&path_vec) {
             Err(err) => {
@@ -113,16 +134,4 @@ mod tests {
         assert_eq!("two", splitted_path[1]);
         assert_eq!("three.txt", splitted_path[2]);
     }
-    /*
-    const OWNCLOUD_URL: &'static str = "https://demo.owncloud.org/remote.php/webdav/";
-
-    fn get_client() -> Client {
-        let uuid = Uuid::new_v4();
-        let url = format!("{}{}", OWNCLOUD_URL, uuid);
-        ClientBuilder::default()
-            .credentials("test", "test")
-            .build(&url)
-            .unwrap()
-    }
-        */
 }

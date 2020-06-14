@@ -28,14 +28,14 @@ pub fn run(dir_to_watch: &str) -> Result<(), notify::Error> {
                     println!("Create: {}", path.as_path().display());
                     match wd.write_file(path) {
                         Ok(_) => (),
-                        _ => (),
+                        Err(err) => println!("Create: there was an error! {}", err),
                     };
                 }
                 Write(path) => {
                     println!("Write: {}", path.as_path().display());
                     match wd.write_file(path) {
                         Ok(_) => (),
-                        _ => (),
+                        Err(err) => println!("Write: there was an error! {}", err),
                     };
                 }
                 Remove(path) => println!("Remove: {}", path.as_path().display()),
