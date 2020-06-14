@@ -2,30 +2,9 @@
 
 ## Prerequisites
 
-* Docker
 * MacOS
 * Rust
-
-## Getting started
-
-1. Make a directory to serve your files. For instance, `/tmp/webdav/data`. Add a file or two there for testing.
-2. Start up your WebDAV server in a Docker container.
-```shell
-docker run --restart always -v /tmp/webdav:/var/lib/dav \
-    -e AUTH_TYPE=Basic -e USERNAME=YOUR_USERNAME -e PASSWORD=YOUR_PASSWORD \
-    --publish 80:80 -d bytemark/webdav
-```
-3. In a web browser, try connecting and make sure your credentials work and that you see your files: http://localhost
-4. Run the Rust client application.
-  * In VSCode
-  * or, `WEBDAV_USERNAME=YOUR_USERNAME WEBDAV_PASSWORD=YOUR_PASSWORD cargo run`
-
-```rust
-    let client = Client::new()
-        .credentials("YOUR_USERNAME", "YOUR_PASSWORD")
-        .build("http://192.168.1.2/")
-        .unwrap();
-```
+* (optional) Docker - for testing/debugging
 
 ## Build and run
 
@@ -47,15 +26,39 @@ export WEBDAV_PASSWORD=YOUR_PASSWORD
 Or you can specify all options at the command-line:
 
 ```
-./target/debug/webdav-sync -h YOUR_HOSTNAME -d /tmp/dir -u YOUR_USERNAME -p YOUR_PASSWORD 
+./target/release/webdav-sync -h YOUR_HOSTNAME -d /tmp/dir -u YOUR_USERNAME -p YOUR_PASSWORD 
 ```
 
 Note:
 * YOUR_HOSTNAME should be an HTTP URL string. For instance http://192.168.1.2
 
-## Limintations
+## Limitations
 
 * The client is using Basic auth credentials. Digest credentials are not supported at this time.
+* Credentials are shown in the clear. Future work is to explore Apple's Keychain services. See [this link](https://crates.io/crates/keychain-services).
+
+## Local testing
+
+You can install a WebDav server locally to test.
+
+1. Make a directory to serve your files. For instance, `/tmp/webdav/data`. Add a file or two there for testing.
+2. Start up your WebDAV server in a Docker container.
+```shell
+docker run --restart always -v /tmp/webdav:/var/lib/dav \
+    -e AUTH_TYPE=Basic -e USERNAME=YOUR_USERNAME -e PASSWORD=YOUR_PASSWORD \
+    --publish 80:80 -d bytemark/webdav
+```
+3. In a web browser, try connecting and make sure your credentials work and that you see your files: http://localhost
+
+You should be set to try it.
+
+## Testing
+
+Limited unit tests are available.
+
+```
+cargo test
+```
 
 ## References
 
