@@ -23,7 +23,8 @@
             "cwd": "${workspaceFolder}",
             "env": {
                 "WEBDAV_USERNAME": "MYUSERNAME",
-                "WEBDAV_PASSWORD": "MYPASSWORD"
+                "WEBDAV_PASSWORD": "MYPASSWORD",
+                "WEBDAV_HOSTNAME": "http://A.B.C.D"
             }
         }
     ]
