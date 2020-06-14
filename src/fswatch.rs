@@ -22,6 +22,12 @@ pub fn run(
         String::from(dir_to_watch),
     );
 
+    println!();
+    println!("==========================");
+    println!("Beginning filesystem watch of: {}", dir_to_watch);
+    println!("               and syncing to: {}", hostname);
+    println!();
+
     loop {
         match rx.recv() {
             Ok(event) => match event {

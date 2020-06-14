@@ -44,7 +44,8 @@ Note:
 * Only creates and writes are watched. Renames, moves, and deletes are not supported.
 * Only syncs from local filesystem to WebDav server (one-way sync, not bi-directional).
 * The client is using Basic auth credentials. Digest credentials are not supported at this time.
-* Credentials are shown in the clear. Future work is to explore Apple's Keychain services. See [this link](https://crates.io/crates/keychain-services).
+* Could use Apple's Keychain services for credentials. See [this link](https://crates.io/crates/keychain-services).
+* No logging. All output goes to stdout.
 
 ## Local testing
 
