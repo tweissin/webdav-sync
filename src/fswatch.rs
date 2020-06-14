@@ -31,7 +31,13 @@ pub fn run(dir_to_watch: &str) -> Result<(), notify::Error> {
                         _ => (),
                     };
                 }
-                Write(path) => println!("Write: {}", path.as_path().display()),
+                Write(path) => {
+                    println!("Write: {}", path.as_path().display());
+                    match wd.write_file(path) {
+                        Ok(_) => (),
+                        _ => (),
+                    };
+                }
                 Remove(path) => println!("Remove: {}", path.as_path().display()),
                 Rename(orig, _) => println!("Rename: {}", orig.as_path().display()),
                 _ => (),

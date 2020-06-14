@@ -27,6 +27,23 @@ docker run --restart always -v /tmp/webdav:/var/lib/dav \
         .unwrap();
 ```
 
+## Build and run
+
+Build it
+
+```
+cargo build --release
+```
+
+Run it
+
+```
+export WEBDAV_USERNAME=YOUR_USERNAME
+export WEBDAV_PASSWORD=YOUR_USERNAME
+export WEBDAV_HOSTNAME=YOUR_USERNAME
+./target/release/webdav-sync
+```
+
 ## Limintations
 
 * The client is using Basic auth credentials. Digest credentials are not supported at this time.

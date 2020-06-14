@@ -23,59 +23,61 @@ impl WebDav {
         let f = File::open(path_buf.clone())?;
         let reader = BufReader::new(f);
 
-        let mut splitted_path: Vec<String> = vec![];
+        let mut path_vec: Vec<String> = vec![];
         let is_file = path_buf.is_file();
-        split_pathbuf(&self.dir_to_watch, path_buf, &mut splitted_path);
+        make_path_vec(&self.dir_to_watch, path_buf, &mut path_vec);
 
         let mut pb = PathBuf::new();
-        let mut iter = splitted_path.iter();
-        let mut pathstr: Vec<String> = vec![];
+        let mut iter = path_vec.iter();
+        let mut path_and_file_vec: Vec<String> = vec![];
         loop {
             match iter.next() {
                 Some(p) => {
-                    println!("adding {}", p);
                     let s = String::from(p);
-                    pathstr.push(s);
+                    path_and_file_vec.push(s);
                     pb.push(p)
                 }
                 None => break,
             }
         }
         if is_file {
-            if splitted_path.len() > 0 {
-                splitted_path.pop();
-                self.mkdir(splitted_path);
+            if path_vec.len() > 0 {
+                path_vec.pop();
+                self.mkdir(path_vec);
             }
-
-            println!("writing file {:?}", pathstr);
-            match self.client.put(reader, pathstr) {
-                Ok(_) => Ok(()),
-                Err(err) => {
-                    println!("problem writing file {}", err);
-                    Ok(())
-                }
-            }
+            self.put_file(path_and_file_vec, reader);
+            Ok(())
         } else {
-            self.mkdir(splitted_path);
+            self.mkdir(path_vec);
             Ok(())
         }
     }
 
-    fn mkdir(&self, splitted_path: Vec<String>) {
-        let whole_path = splitted_path.join("/");
-        println!("making dir {}", whole_path);
-
-        match self.client.mkcol(&splitted_path) {
+    fn put_file(&self, path_and_file_vec: Vec<String>, reader: BufReader<File>) {
+        let pathstr = path_and_file_vec.join("/");
+        println!("WebDav: write '{}'", pathstr);
+        match self.client.put(reader, path_and_file_vec) {
             Err(err) => {
-                println!("problem making directory {} {}", whole_path, err);
-                return;
+                println!("problem writing file {}", err);
             }
-            Ok(_) => return,
+            _ => (),
+        }
+    }
+
+    fn mkdir(&self, path_vec: Vec<String>) {
+        let pathstr = path_vec.join("/");
+        println!("WebDav: mkdir '{}'", pathstr);
+
+        match self.client.mkcol(&path_vec) {
+            Err(err) => {
+                println!("problem making directory '{}' {}", pathstr, err);
+            }
+            _ => (),
         }
     }
 }
 
-fn split_pathbuf(dir_to_watch: &PathBuf, incoming_path: PathBuf, out: &mut Vec<String>) {
+fn make_path_vec(dir_to_watch: &PathBuf, incoming_path: PathBuf, path_vec: &mut Vec<String>) {
     let mut iter1 = dir_to_watch.iter();
     let mut iter2 = incoming_path.iter();
     loop {
@@ -88,7 +90,7 @@ fn split_pathbuf(dir_to_watch: &PathBuf, incoming_path: PathBuf, out: &mut Vec<S
         match iter2.next() {
             Some(val) => {
                 let p = String::from(val.to_str().unwrap());
-                out.push(p)
+                path_vec.push(p)
             }
             None => break,
         }
@@ -105,7 +107,7 @@ mod tests {
         let mut splitted_path: Vec<String> = vec![];
         let dir_to_watch = PathBuf::from("/Users/tweissin/deletemesoon");
         let incoming_path = PathBuf::from("/Users/tweissin/deletemesoon/one/two/three.txt");
-        split_pathbuf(&dir_to_watch, incoming_path, &mut splitted_path);
+        make_path_vec(&dir_to_watch, incoming_path, &mut splitted_path);
         assert_eq!(3, splitted_path.len());
         assert_eq!("one", splitted_path[0]);
         assert_eq!("two", splitted_path[1]);
