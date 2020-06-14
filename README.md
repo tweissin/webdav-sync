@@ -38,11 +38,20 @@ cargo build --release
 Run it
 
 ```
+export WEBDAV_HOSTNAME=YOUR_HOSTNAME
 export WEBDAV_USERNAME=YOUR_USERNAME
-export WEBDAV_PASSWORD=YOUR_USERNAME
-export WEBDAV_HOSTNAME=YOUR_USERNAME
-./target/release/webdav-sync
+export WEBDAV_PASSWORD=YOUR_PASSWORD
+./target/release/webdav-sync -d /tmp/dir
 ```
+
+Or you can specify all options at the command-line:
+
+```
+./target/debug/webdav-sync -h YOUR_HOSTNAME -d /tmp/dir -u YOUR_USERNAME -p YOUR_PASSWORD 
+```
+
+Note:
+* YOUR_HOSTNAME should be an HTTP URL string. For instance http://192.168.1.2
 
 ## Limintations
 

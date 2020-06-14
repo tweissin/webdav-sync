@@ -1,23 +1,24 @@
 use crate::webdav::WebDav;
 use notify::DebouncedEvent::{Create, Remove, Rename, Write};
 use notify::{watcher, RecursiveMode, Watcher};
-use std::env;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
-pub fn run(dir_to_watch: &str) -> Result<(), notify::Error> {
+pub fn run(
+    hostname: &str,
+    username: &str,
+    password: &str,
+    dir_to_watch: &str,
+) -> Result<(), notify::Error> {
     let (tx, rx) = channel();
     let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
 
     watcher.watch(dir_to_watch, RecursiveMode::Recursive)?;
 
-    let hostname = env::var("WEBDAV_HOSTNAME");
-    let username = env::var("WEBDAV_USERNAME");
-    let password = env::var("WEBDAV_PASSWORD");
     let wd = WebDav::new(
-        hostname.unwrap(),
-        username.unwrap(),
-        password.unwrap(),
+        String::from(hostname),
+        String::from(username),
+        String::from(password),
         String::from(dir_to_watch),
     );
 
