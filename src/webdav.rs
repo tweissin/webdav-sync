@@ -23,35 +23,23 @@ impl WebDav {
         }
     }
     pub fn write_file(&self, path_buf: PathBuf) -> io::Result<()> {
-        let pb = path_buf.clone();
-        let md = fs::metadata(pb)?;
-        let size: u64 = md.len();
-        let f = File::open(path_buf.clone())?;
+        let f = File::open(&path_buf)?;
         let reader = BufReader::new(f);
 
         let mut path_vec: Vec<String> = vec![];
         let is_file = path_buf.is_file();
-        make_path_vec(&self.dir_to_watch, path_buf, &mut path_vec);
+        make_path_vec(&self.dir_to_watch, &path_buf, &mut path_vec);
 
-        let mut pb = PathBuf::new();
-        let mut iter = path_vec.iter();
-        let mut path_and_file_vec: Vec<String> = vec![];
-        loop {
-            match iter.next() {
-                Some(p) => {
-                    let s = String::from(p);
-                    path_and_file_vec.push(s);
-                    pb.push(p)
-                }
-                None => break,
-            }
-        }
         if is_file {
+            let path_and_file_vec = path_vec.clone();
             if path_vec.len() > 0 {
                 path_vec.pop();
                 self.mkdir(path_vec);
             }
+            let size: u64 = fs::metadata(&path_buf)?.len();
             let now = Instant::now();
+
+            // put the file!
             self.put_file(path_and_file_vec, reader);
 
             let duration = now.elapsed();
@@ -98,7 +86,7 @@ impl WebDav {
     }
 }
 
-fn make_path_vec(dir_to_watch: &PathBuf, incoming_path: PathBuf, path_vec: &mut Vec<String>) {
+fn make_path_vec(dir_to_watch: &PathBuf, incoming_path: &PathBuf, path_vec: &mut Vec<String>) {
     let mut iter1 = dir_to_watch.iter();
     let mut iter2 = incoming_path.iter();
     loop {
@@ -128,7 +116,7 @@ mod tests {
         let mut splitted_path: Vec<String> = vec![];
         let dir_to_watch = PathBuf::from("/Users/tweissin/deletemesoon");
         let incoming_path = PathBuf::from("/Users/tweissin/deletemesoon/one/two/three.txt");
-        make_path_vec(&dir_to_watch, incoming_path, &mut splitted_path);
+        make_path_vec(&dir_to_watch, &incoming_path, &mut splitted_path);
         assert_eq!(3, splitted_path.len());
         assert_eq!("one", splitted_path[0]);
         assert_eq!("two", splitted_path[1]);
