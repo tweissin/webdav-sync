@@ -22,7 +22,7 @@ Run it and it will prompt you for all parameters.
 ./target/release/webdav-sync 
 ```
 
-You may otionally cnfigure your `.bash_profile`/`.zprofile` and restart your shell so it doesn't ask you for every parameter.
+You may otionally configure your `.bash_profile`/`.zprofile` and restart your shell so it doesn't ask you for every parameter.
 
 ```
 export WEBDAV_HOSTNAME=YOUR_HOSTNAME
