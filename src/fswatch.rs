@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{io, time::Duration};
 
 use notify::RecursiveMode;
 use notify_debouncer_full::new_debouncer;
