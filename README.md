@@ -58,6 +58,19 @@ docker run --restart always -v /tmp/webdav:/var/lib/dav \
     -e AUTH_TYPE=Basic -e USERNAME=YOUR_USERNAME -e PASSWORD=YOUR_PASSWORD \
     --publish 80:80 -d bytemark/webdav
 ```
+
+or if on Mac Silicon (ARM)
+```shell
+docker run --name webdav \
+  --restart=unless-stopped \
+  -p 80:80 \
+  -v /tmp/webdav:/media \
+  -e USERNAME=YOUR_USERNAME \
+  -e PASSWORD=YOUR_PASSWORD \
+  -e UDI=1000 \
+  -e GID=1000 \
+  -d  ugeek/webdav:arm
+```
 3. In a web browser, try connecting and make sure your credentials work and that you see your files: http://localhost
 
 You should be set to try it.

@@ -1,6 +1,6 @@
 use clap::Parser;
-use std::env;
-use std::io;
+mod fswatch;
+use std::io::Result;
 
 /// Filesystem watcher that syncs with WebDav
 #[derive(Parser, Debug)]
@@ -23,12 +23,12 @@ struct Args {
     dir: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     // let args = Args::parse();
     let args = Args {
-        username: String::from("foo"),
-        password: String::from("pwd"),
-        hostname: String::from("127.0.0.1"),
+        username: String::from("YOUR_USERNAME"),
+        password: String::from("YOUR_PASSWORD"),
+        hostname: String::from("localhost"),
         dir: String::from("/tmp")
     };
 
@@ -41,4 +41,9 @@ fn main() {
     println!("{}", &username);
     println!("{}", &password);
     println!("{}", &dir);
+
+    match fswatch::run(&hostname, &username, &password, &dir) {
+        err => panic!("Problem watching: {:?}", err),
+        _ => Ok(()),
+    }
 }
