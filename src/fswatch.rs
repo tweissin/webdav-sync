@@ -4,17 +4,15 @@ use notify::RecursiveMode;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
-// see https://github.com/notify-rs/notify/blob/main/examples/debouncer_full.rs
+// credit: https://github.com/notify-rs/notify/blob/main/examples/debouncer_full.rs
 pub fn run(
     hostname: &str,
     username: &str,
     password: &str,
     dir_to_watch: &str,
 ) -> Result<(), notify::Error> {
-    // setup debouncer
     let (tx, rx) = channel();
 
-    // no specific tickrate, max debounce time 2 seconds
     let mut watcher = new_debouncer(Duration::from_secs(2), None, tx)?;
 
     watcher.watch(dir_to_watch, RecursiveMode::Recursive)?;
@@ -36,30 +34,7 @@ pub fn run(
         match result {
             Ok(events) => {
                 for event in events {
-                    if event.event.kind.is_create() {
-                        let path_clone = event.event.paths[0].clone();
-                        println!("Create: {}", path_clone.display());
-                        let _ = wd.write_file(path_clone);
-                    } else if event.event.kind.is_modify() {
-                        if event.event.paths.len() == 1 {
-                            let path_clone = event.event.paths[0].clone();
-                            println!("Modify: {}", path_clone.display());
-                            let _ = wd.write_file(path_clone);
-                        } else {
-                            let src_path = event.event.paths[0].clone();
-                            let dst_path = event.event.paths[1].clone();
-                            println!(
-                                "Rename from: {} to: {}",
-                                src_path.display(),
-                                dst_path.display()
-                            );
-                            // Optionally handle renames
-                        }
-                    } else if event.event.kind.is_remove() {
-                        let path_clone = event.event.paths[0].clone();
-                        println!("Remove: {}", path_clone.display());
-                        // Optionally handle deletions
-                    }
+                    handle_event(&wd, &event);
                 }
             }
             Err(errors) => {
@@ -71,6 +46,48 @@ pub fn run(
         }
     }
     Ok(())
+}
+
+fn handle_event(wd: &WebDav, event: &notify::event::Event) {
+    for path in &event.paths {
+        if let Some(file_name) = path.file_name() {
+            if file_name == ".DS_Store" {
+                // Skip macOS .DS_Store files
+                println!("Skipping macOS system file: {}", path.display());
+                continue;
+            }
+        }
+
+        match &event.kind {
+            notify::event::EventKind::Create(_) => {
+                println!("Create: {}", path.display());
+                if let Err(e) = wd.write_file(path.clone()) {
+                    eprintln!("Failed to handle create event: {}", e);
+                }
+            }
+            notify::event::EventKind::Modify(modify_kind) => match modify_kind {
+                notify::event::ModifyKind::Name(_) => {
+                    if path.exists() {
+                        println!("Rename or move detected: {}", path.display());
+                    } else {
+                        println!("Folder or file deleted: {}", path.display());
+                    }
+                }
+                notify::event::ModifyKind::Metadata(_) => {
+                    println!("Metadata changed: {}", path.display());
+                }
+                _ => {
+                    println!("Other modify event: {:?}", modify_kind);
+                }
+            },
+            notify::event::EventKind::Remove(_) => {
+                println!("Remove: {}", path.display());
+            }
+            _ => {
+                println!("Unhandled event: {:?}", event.kind);
+            }
+        }
+    }
 }
 
 
