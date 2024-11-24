@@ -1,10 +1,11 @@
 use clap::Parser;
 mod fswatch;
+mod webdav;
 use std::{env, io::Result};
 
 /// Filesystem watcher that syncs with WebDav
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version, author = env!("CARGO_PKG_AUTHORS"))]
 struct Args {
     /// WebDav username
     #[arg(short, long, default_value_t=get_default_from_env("WEBDAV_USERNAME"))]
