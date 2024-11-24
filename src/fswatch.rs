@@ -52,7 +52,6 @@ fn handle_event(wd: &WebDav, event: &notify::event::Event) {
     for path in &event.paths {
         if let Some(file_name) = path.file_name() {
             if file_name == ".DS_Store" {
-                // Skip macOS .DS_Store files
                 println!("Skipping macOS system file: {}", path.display());
                 continue;
             }
@@ -67,42 +66,37 @@ fn handle_event(wd: &WebDav, event: &notify::event::Event) {
             }
             notify::event::EventKind::Modify(modify_kind) => match modify_kind {
                 notify::event::ModifyKind::Name(_) => {
-                    if event.paths.len() == 2 {
-                        // Handle rename events
+                    if event.paths.len() == 1 {
+                        // Single path: Check if it still exists
+                        if path.exists() {
+                            println!("Single path modify: rename or move detected: {}", path.display());
+                        } else {
+                            println!("Single path modify: file or directory deleted: {}", path.display());
+                            if let Err(e) = wd.delete(path.clone()) {
+                                eprintln!("Failed to handle delete event: {}", e);
+                            }
+                        }
+                    } else if event.paths.len() == 2 {
+                        // Two paths: Likely a rename or move
                         let src_path = &event.paths[0];
                         let dst_path = &event.paths[1];
-                        println!(
-                            "Rename detected from: {} to: {}",
-                            src_path.display(),
-                            dst_path.display()
-                        );
-
-                        // Optionally handle the rename with your WebDav client
+                        println!("Rename or move detected from {} to {}", src_path.display(), dst_path.display());
                         if let Err(e) = wd.rename(src_path.clone(), dst_path.clone()) {
                             eprintln!("Failed to handle rename: {}", e);
                         }
                     } else {
-                        println!(
-                            "Unexpected number of paths for rename: {:?}",
-                            event.paths
-                        );
+                        eprintln!("Unexpected number of paths for modify: {:?}", event.paths);
                     }
                 }
-                notify::event::ModifyKind::Metadata(_) => {
-                    println!("Metadata changed: {}", path.display());
-                }
-                _ => {
-                    println!("Other modify event: {:?}", modify_kind);
-                }
+                _ => println!("Unhandled Modify kind: {:?}", modify_kind),
             },
             notify::event::EventKind::Remove(_) => {
                 println!("Remove: {}", path.display());
+                if let Err(e) = wd.delete(path.clone()) {
+                    eprintln!("Failed to handle delete event: {}", e);
+                }
             }
-            _ => {
-                println!("Unhandled event: {:?}", event.kind);
-            }
+            _ => println!("Unhandled event kind: {:?}", event.kind),
         }
     }
 }
-
-
