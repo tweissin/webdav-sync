@@ -1,7 +1,8 @@
 [package]
 name = "webdav-sync"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
+authors = ["Tom Weissinger"]
 
 [dependencies]
 notify = "7.0.0"

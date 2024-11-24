@@ -1,10 +1,8 @@
-use std::{io, time::Duration};
-
-use notify::RecursiveMode;
+use crate::webdav::WebDav;
 use notify_debouncer_full::new_debouncer;
-
-use rustydav::client;
-use std::fs;
+use notify::RecursiveMode;
+use std::sync::mpsc::channel;
+use std::time::Duration;
 
 // see https://github.com/notify-rs/notify/blob/main/examples/debouncer_full.rs
 pub fn run(
@@ -13,15 +11,25 @@ pub fn run(
     password: &str,
     dir_to_watch: &str,
 ) -> Result<(), notify::Error> {
-    let client = client::Client::init(username, password);
-
     // setup debouncer
-    let (tx, rx) = std::sync::mpsc::channel();
+    let (tx, rx) = channel();
 
     // no specific tickrate, max debounce time 2 seconds
-    let mut debouncer = new_debouncer(Duration::from_secs(2), None, tx)?;
+    let mut watcher = new_debouncer(Duration::from_secs(2), None, tx)?;
 
-    debouncer.watch(dir_to_watch, RecursiveMode::Recursive)?;
+    watcher.watch(dir_to_watch, RecursiveMode::Recursive)?;
+
+    let wd = WebDav::new(
+        String::from(hostname),
+        String::from(username),
+        String::from(password),
+    );
+
+    println!();
+    println!("==========================");
+    println!("Beginning filesystem watch of: {}", dir_to_watch);
+    println!("               and syncing to: {}", hostname);
+    println!();
 
     // print all events and errors
     for result in rx {
@@ -30,18 +38,18 @@ pub fn run(
                 for event in events {
                     if event.event.kind.is_create() {
                         let path_clone = event.event.paths[0].clone();
-                        println!("File created: {}", path_clone.display());
-                        upload_to_webdav(&client, hostname, path_clone);
+                        println!("Create: {}", path_clone.display());
+                        wd.write_file(path_clone);
                     } else if event.event.kind.is_modify() {
                         if event.event.paths.len() == 1 {
                             let path_clone = event.event.paths[0].clone();
-                            println!("File modified: {}", path_clone.display());
-                            upload_to_webdav(&client, hostname, path_clone);
+                            println!("Modify: {}", path_clone.display());
+                            wd.write_file(path_clone);
                         } else {
                             let src_path = event.event.paths[0].clone();
                             let dst_path = event.event.paths[1].clone();
                             println!(
-                                "File renamed from: {} to: {}",
+                                "Rename from: {} to: {}",
                                 src_path.display(),
                                 dst_path.display()
                             );
@@ -49,7 +57,7 @@ pub fn run(
                         }
                     } else if event.event.kind.is_remove() {
                         let path_clone = event.event.paths[0].clone();
-                        println!("File deleted: {}", path_clone.display());
+                        println!("Remove: {}", path_clone.display());
                         // Optionally handle deletions
                     }
                 }
@@ -57,41 +65,12 @@ pub fn run(
             Err(errors) => {
                 // Handle errors
                 for error in errors {
-                    println!("Error: {:?}", error);
+                    println!("watch error: {:?}", error);
                 }
             }
         }
-        println!();
     }
     Ok(())
 }
 
-fn upload_to_webdav(client: &client::Client, hostname: &str, path: std::path::PathBuf) {
-    match load_file_to_bytes(&path) {
-        Ok(file_content) => {
-            // Generate the remote path
-            let remote_path = format!(
-                "http://{}/{}",
-                hostname,
-                path.file_name().unwrap().to_string_lossy()
-            );
-            println!("Uploading to: {}", remote_path);
 
-            // Upload the file
-            // (&self, body: B, path: &str)
-            match client.put(file_content, &remote_path) {
-                Ok(_) => println!("Uploaded: {}", remote_path),
-                Err(e) => eprintln!("Failed to upload {}: {:?}", remote_path, e),
-            }
-        }
-        Err(e) => {
-            eprintln!("Failed to load file: {}", e);
-        }
-    }
-}
-
-fn load_file_to_bytes(path: &std::path::PathBuf) -> io::Result<Vec<u8>> {
-    let error = format!("Unable to read file {}", path.display());
-    let buffer = fs::read(path).expect(&error);
-    Ok(buffer)
-}
