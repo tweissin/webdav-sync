@@ -28,21 +28,29 @@ pub fn run(
         match result {
             Ok(events) => {
                 for event in events {
-                    for path in &event.event.paths {
-                        let path_clone = path.clone();
-                        if event.event.kind.is_modify() {
+                    if event.event.kind.is_create() {
+                        let path_clone = event.event.paths[0].clone();
+                        println!("File created: {}", path_clone.display());
+                        upload_to_webdav(&client, hostname, path_clone);
+                    } else if event.event.kind.is_modify() {
+                        if event.event.paths.len() == 1 {
+                            let path_clone = event.event.paths[0].clone();
                             println!("File modified: {}", path_clone.display());
                             upload_to_webdav(&client, hostname, path_clone);
-                        } else if event.event.kind.is_create() {
-                            println!("File created: {}", path_clone.display());
-                            upload_to_webdav(&client, hostname, path_clone);
-                        } else if event.event.kind.is_other() {
-                            println!("File renamed???: {}", path_clone.display());
+                        } else {
+                            let src_path = event.event.paths[0].clone();
+                            let dst_path = event.event.paths[1].clone();
+                            println!(
+                                "File renamed from: {} to: {}",
+                                src_path.display(),
+                                dst_path.display()
+                            );
                             // Optionally handle renames
-                        } else if event.event.kind.is_remove() {
-                            println!("File deleted: {}", path_clone.display());
-                            // Optionally handle deletions
                         }
+                    } else if event.event.kind.is_remove() {
+                        let path_clone = event.event.paths[0].clone();
+                        println!("File deleted: {}", path_clone.display());
+                        // Optionally handle deletions
                     }
                 }
             }
@@ -62,7 +70,11 @@ fn upload_to_webdav(client: &client::Client, hostname: &str, path: std::path::Pa
     match load_file_to_bytes(&path) {
         Ok(file_content) => {
             // Generate the remote path
-            let remote_path = format!("http://{}/{}", hostname, path.file_name().unwrap().to_string_lossy());
+            let remote_path = format!(
+                "http://{}/{}",
+                hostname,
+                path.file_name().unwrap().to_string_lossy()
+            );
             println!("Uploading to: {}", remote_path);
 
             // Upload the file
@@ -81,5 +93,5 @@ fn upload_to_webdav(client: &client::Client, hostname: &str, path: std::path::Pa
 fn load_file_to_bytes(path: &std::path::PathBuf) -> io::Result<Vec<u8>> {
     let error = format!("Unable to read file {}", path.display());
     let buffer = fs::read(path).expect(&error);
-    Ok(buffer)                       
+    Ok(buffer)
 }
