@@ -23,6 +23,7 @@ pub fn run(
         String::from(hostname),
         String::from(username),
         String::from(password),
+        String::from(dir_to_watch),
     );
 
     println!();
@@ -31,7 +32,6 @@ pub fn run(
     println!("               and syncing to: {}", hostname);
     println!();
 
-    // print all events and errors
     for result in rx {
         match result {
             Ok(events) => {
@@ -39,12 +39,12 @@ pub fn run(
                     if event.event.kind.is_create() {
                         let path_clone = event.event.paths[0].clone();
                         println!("Create: {}", path_clone.display());
-                        wd.write_file(path_clone);
+                        let _ = wd.write_file(path_clone);
                     } else if event.event.kind.is_modify() {
                         if event.event.paths.len() == 1 {
                             let path_clone = event.event.paths[0].clone();
                             println!("Modify: {}", path_clone.display());
-                            wd.write_file(path_clone);
+                            let _ = wd.write_file(path_clone);
                         } else {
                             let src_path = event.event.paths[0].clone();
                             let dst_path = event.event.paths[1].clone();
