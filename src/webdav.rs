@@ -54,6 +54,29 @@ impl WebDav {
         }
     }
 
+    pub fn delete(&self, path: PathBuf) -> Result<()> {
+        // Convert the path to a relative path
+        let relative_path = path.strip_prefix(&self.dir_to_watch)
+            .map_err(|e| Error::new(ErrorKind::InvalidInput, e.to_string()))?;
+        
+        // Construct the full WebDav URL
+        let remote_path = format!("http://{}/{}", self.hostname, relative_path.display());
+
+        println!("Deleting: {}", remote_path);
+
+        // Call the WebDav client delete method
+        match self.client.delete(&remote_path) {
+            Ok(_) => {
+                println!("Successfully deleted: {}", remote_path);
+                Ok(())
+            }
+            Err(e) => {
+                eprintln!("Failed to delete {}: {:?}", remote_path, e);
+                Err(Error::new(ErrorKind::Other, e.to_string()))
+            }
+        }
+    }
+
     /// Load file contents into a vector of bytes
     fn load_file_to_bytes(path: &Path) -> Result<Vec<u8>> {
         fs::read(path).map_err(|err| {
