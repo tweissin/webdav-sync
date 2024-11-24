@@ -32,14 +32,9 @@ fn main() -> Result<()> {
     let password: String = args.password;
     let dir: String = args.dir;
 
-    println!("{}", hostname);
-    println!("{}", username);
-    println!("{}", password);
-    println!("{}", dir);
-
     match fswatch::run(&hostname, &username, &password, &dir) {
-        Ok(()) => Ok(()),
         Err(err) => panic!("Problem watching: {:?}", err),
+        _ => Ok(()),
     }
 }
 
