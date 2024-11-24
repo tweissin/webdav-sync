@@ -67,10 +67,25 @@ fn handle_event(wd: &WebDav, event: &notify::event::Event) {
             }
             notify::event::EventKind::Modify(modify_kind) => match modify_kind {
                 notify::event::ModifyKind::Name(_) => {
-                    if path.exists() {
-                        println!("Rename or move detected: {}", path.display());
+                    if event.paths.len() == 2 {
+                        // Handle rename events
+                        let src_path = &event.paths[0];
+                        let dst_path = &event.paths[1];
+                        println!(
+                            "Rename detected from: {} to: {}",
+                            src_path.display(),
+                            dst_path.display()
+                        );
+
+                        // Optionally handle the rename with your WebDav client
+                        if let Err(e) = wd.rename(src_path.clone(), dst_path.clone()) {
+                            eprintln!("Failed to handle rename: {}", e);
+                        }
                     } else {
-                        println!("Folder or file deleted: {}", path.display());
+                        println!(
+                            "Unexpected number of paths for rename: {:?}",
+                            event.paths
+                        );
                     }
                 }
                 notify::event::ModifyKind::Metadata(_) => {

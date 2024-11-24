@@ -1,6 +1,6 @@
 use rustydav::client;
 use std::fs;
-use std::io::Result;
+use std::io::{Error, ErrorKind, Result};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -27,6 +27,31 @@ impl WebDav {
             self.mkdir(&path_buf);
         }
         Ok(())
+    }
+
+    pub fn rename(&self, src: PathBuf, dst: PathBuf) -> Result<()> {
+        // Convert the source and destination paths to relative paths
+        let relative_src = src
+            .strip_prefix(&self.dir_to_watch)
+            .map_err(|e| Error::new(ErrorKind::InvalidInput, e.to_string()))?;
+        let relative_dst = dst
+            .strip_prefix(&self.dir_to_watch)
+            .map_err(|e| Error::new(ErrorKind::InvalidInput, e.to_string()))?;
+
+        // Construct the full WebDav URLs
+        let remote_src = format!("http://{}/{}", self.hostname, relative_src.display());
+        let remote_dst = format!("http://{}/{}", self.hostname, relative_dst.display());
+
+        println!("Renaming on server: {} -> {}", remote_src, remote_dst);
+
+        // Use the "mv" method instead of "move_item"
+        match self.client.mv(&remote_src, &remote_dst) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Error::new(
+                ErrorKind::Other,
+                e.to_string(),
+            )),
+        }
     }
 
     /// Load file contents into a vector of bytes
