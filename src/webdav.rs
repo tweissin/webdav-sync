@@ -24,7 +24,7 @@ impl WebDav {
         if path_buf.is_file() {
             self.upload_file(&path_buf)?;
         } else {
-            self.mkdir(&path_buf);
+            self.create_dir(path_buf)?; 
         }
         Ok(())
     }
@@ -85,14 +85,25 @@ impl WebDav {
         })
     }
 
-    /// Create a directory on the remote WebDAV server
-    fn mkdir(&self, path_buf: &Path) {
-        if let Some(parent) = path_buf.parent() {
-            let remote_path = self.generate_remote_path(parent);
-            println!("WebDav: mkdir '{}'", remote_path);
-
-            if let Err(err) = self.client.mkcol(&remote_path) {
-                eprintln!("Failed to create directory '{}': {}", remote_path, err);
+    pub fn create_dir(&self, dir_path: PathBuf) -> Result<()> {
+        // Convert the local directory path to a relative path
+        let relative_path = dir_path
+            .strip_prefix(&self.dir_to_watch)
+            .map_err(|e| Error::new(ErrorKind::InvalidInput, e.to_string()))?;
+    
+        // Construct the remote WebDAV URL
+        let remote_path = format!("http://{}/{}", self.hostname, relative_path.display());
+        println!("WebDav: mkdir '{}'", remote_path);
+    
+        // Make the directory on the WebDAV server
+        match self.client.mkcol(&remote_path) {
+            Ok(_) => {
+                println!("Successfully created directory: {}", remote_path);
+                Ok(())
+            }
+            Err(e) => {
+                eprintln!("Failed to create directory '{}': {}", remote_path, e);
+                Err(Error::new(ErrorKind::Other, e.to_string()))
             }
         }
     }

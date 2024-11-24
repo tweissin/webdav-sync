@@ -60,14 +60,19 @@ fn handle_event(wd: &WebDav, event: &notify::event::Event) {
         match &event.kind {
             notify::event::EventKind::Create(_) => {
                 println!("Create: {}", path.display());
-                if let Err(e) = wd.write_file(path.clone()) {
-                    eprintln!("Failed to handle create event: {}", e);
+                if path.is_dir() {
+                    if let Err(e) = wd.create_dir(path.clone()) {
+                        eprintln!("Failed to create directory: {}", e);
+                    }
+                } else {
+                    if let Err(e) = wd.write_file(path.clone()) {
+                        eprintln!("Failed to upload file: {}", e);
+                    }
                 }
             }
             notify::event::EventKind::Modify(modify_kind) => match modify_kind {
                 notify::event::ModifyKind::Name(_) => {
                     if event.paths.len() == 1 {
-                        // Single path: Check if it still exists
                         if path.exists() {
                             println!("Single path modify: rename or move detected: {}", path.display());
                         } else {
@@ -77,7 +82,6 @@ fn handle_event(wd: &WebDav, event: &notify::event::Event) {
                             }
                         }
                     } else if event.paths.len() == 2 {
-                        // Two paths: Likely a rename or move
                         let src_path = &event.paths[0];
                         let dst_path = &event.paths[1];
                         println!("Rename or move detected from {} to {}", src_path.display(), dst_path.display());
