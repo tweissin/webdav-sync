@@ -10,3 +10,4 @@ notify-debouncer-full = "0.4.0"
 rustydav = "0.1.3"
 clap = { version = "4.5.21", features = ["derive"] }
 proc-macro2 = "1.0.92"
+dirs-next = "2.0"
